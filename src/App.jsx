@@ -1,13 +1,38 @@
-// import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import PropTypes from "prop-types";
-// import axios from "axios";
+import axios from "axios";
 
-const CheckboxRadio = ({ id, labelText, type }) => {
+const CheckboxRadio = ({
+  id,
+  name,
+  labelText,
+  type,
+  rules,
+  register,
+  errors,
+  value,
+}) => {
   return (
     <div className="flex items-center gap-2">
-      <input type={type} id={id} />
-      <label htmlFor={id}>{labelText}</label>
+      <input
+        type={type}
+        id={id}
+        name={name}
+        value={value}
+        {...register(name, rules)}
+        className={
+          errors[name] && type === "radio"
+            ? "size-[13px] appearance-none rounded-full border border-red-600"
+            : "size-[13px] appearance-none rounded-[1px] border border-red-600"
+        }
+      />
+      <label htmlFor={id} className={errors[name] && "text-red-600"}>
+        {labelText}
+      </label>
+      {errors[name] && (
+        <div className="text-sm text-red-600">{errors[name]?.message}</div>
+      )}
     </div>
   );
 };
@@ -25,27 +50,36 @@ const Input = ({ id, labelText, type, rules, register, errors }) => {
         {...register(id, rules)}
       />
       {errors[id] && (
-        <div className="text-sm text-red-600">{errors?.[id]?.message}</div>
+        <div className="text-sm text-red-600">{errors[id]?.message}</div>
       )}
     </>
   );
 };
 
-const Select = ({ id, labelText, rules, register, errors, children }) => {
+const Select = ({
+  id,
+  labelText,
+  rules,
+  register,
+  errors,
+  disabled,
+  children,
+}) => {
   return (
     <>
       <label htmlFor={id} className="mb-4">
         {labelText}
       </label>
       <select
-        className={`${errors[id] && "border-red-600 text-red-600"} rounded-md border p-2`}
+        className={`${errors[id] && "border-red-600"} rounded-md border p-2`}
         id={id}
         {...register(id, rules)}
+        disabled={disabled}
       >
         {children}
       </select>
       {errors[id] && (
-        <div className="text-sm text-red-600">{errors?.[id]?.message}</div>
+        <div className="text-sm text-red-600">{errors[id]?.message}</div>
       )}
     </>
   );
@@ -74,6 +108,9 @@ Select.propTypes = {
 function App() {
   const {
     register,
+    getValues,
+    control,
+    handleSubmit,
     formState: { errors },
   } = useForm({ mode: "onTouched" });
 
@@ -81,9 +118,29 @@ function App() {
     console.log(data);
   };
 
+  const [addressData, setAddressData] = useState([]);
+
+  const watchForm = useWatch({
+    control,
+  });
+
+  useEffect(() => {
+    // console.log(getValues());
+    // console.log("errors", errors);
+    // 或是使用 setValues 寫入值
+  }, [watchForm]); // 將新變數傳入
+
+  useEffect(() => {
+    (async () => {
+      const result = await axios.get("/src/assets/taiwan.json");
+      console.log(result);
+      setAddressData(result.data);
+    })();
+  }, []);
+
   return (
     <div>
-      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col">
           <Input
             id="username"
@@ -149,6 +206,13 @@ function App() {
               register={register}
             >
               <option value="">請選擇縣市</option>
+              {addressData.map((city) => {
+                return (
+                  <option value={city.CityName} key={city.CityEngName}>
+                    {city.CityName}
+                  </option>
+                );
+              })}
             </Select>
           </div>
           <div className="flex w-full flex-col">
@@ -158,8 +222,18 @@ function App() {
               errors={errors}
               rules={{ required: "鄉鎮為必填" }}
               register={register}
+              disabled={!getValues().city}
             >
               <option value="">請選擇鄉鎮市區</option>
+              {addressData
+                .find((city) => city.CityName === getValues().city)
+                ?.AreaList?.map((area) => {
+                  return (
+                    <option value={area} key={area.AreaName}>
+                      {area.AreaName}
+                    </option>
+                  );
+                })}
             </Select>
           </div>
         </div>
@@ -181,21 +255,35 @@ function App() {
           </label>
           <CheckboxRadio
             id="vegetarian"
+            name="isVegetarian"
             type="radio"
             labelText="是"
+            value={true}
+            errors={errors}
+            rules={{ required: "請選擇是否吃素" }}
+            register={register}
           ></CheckboxRadio>
           <CheckboxRadio
             id="vegetarian"
+            name="nonVegetarian"
             type="radio"
             labelText="否"
+            value={false}
+            errors={errors}
+            rules={{ required: "請選擇是否吃素" }}
+            register={register}
           ></CheckboxRadio>
         </div>
 
         <div className="flex flex-col">
           <CheckboxRadio
             id="isCheckForm"
+            name="isCheckForm"
             type="checkbox"
             labelText="確認同意本文件"
+            errors={errors}
+            rules={{ required: true }}
+            register={register}
           ></CheckboxRadio>
         </div>
 
