@@ -10,25 +10,29 @@ const Input = ({ id, labelText, type, errors, register, rules }) => {
       </label>
       <input
         id={id}
-        className="rounded-md border border-gray-400 p-1"
+        className={`${errors[id] && "border-red-600"} rounded-md border p-1`}
         type={type}
-        // {...register(id, rules)}
-        // rules={rules}
+        {...register(id, rules)}
       />
-      {errors[id] && <div>{errors[id]?.message}</div>}
+      {errors[id] && <div className="text-red-600">{errors[id]?.message}</div>}
     </div>
   );
 };
 
-const Select = ({ id, labelText, children }) => {
+const Select = ({ id, labelText, errors, register, rules, children }) => {
   return (
     <div className="flex w-full flex-col">
       <label className="mb-2" htmlFor={id}>
         {labelText}
       </label>
-      <select className="rounded-md border border-gray-400 p-1" id={id}>
+      <select
+        id={id}
+        className={`${errors[id] && "border-red-600"} rounded-md border p-1`}
+        {...register(id, rules)}
+      >
         {children}
       </select>
+      {errors[id] && <div className="text-red-600">{errors[id]?.message}</div>}
     </div>
   );
 };
@@ -77,34 +81,59 @@ function App() {
       <Input
         id="userName"
         labelText="使用者名稱"
+        type="text"
         errors={errors}
         rules={{ required: "使用者名稱為必填" }}
+        register={register}
       ></Input>
 
       <Input
         id="email"
         labelText="Email"
+        type="email"
         errors={errors}
         rules={{ required: "Email為必填" }}
+        register={register}
       ></Input>
 
       <Input
         id="tel"
         labelText="電話"
+        type="tel"
         errors={errors}
         rules={{ required: "電話為必填" }}
+        register={register}
       ></Input>
 
-      <div className="flex gap-4">
-        <Select id="city" labelText="縣市">
+      <div className="flex justify-between space-x-4">
+        <Select
+          id="city"
+          labelText="縣市"
+          errors={errors}
+          register={register}
+          rules={{ required: "縣市為必填" }}
+        >
           <option value="">請選擇縣市</option>
         </Select>
-        <Select id="city" labelText="鄉鎮市區">
+        <Select
+          id="district"
+          labelText="鄉鎮市區"
+          errors={errors}
+          register={register}
+          rules={{ required: "鄉鎮市區為必填" }}
+        >
           <option value="">請選擇鄉鎮市區</option>
         </Select>
       </div>
 
-      <Input id="address" labelText="地址" errors={errors}></Input>
+      <Input
+        id="address"
+        labelText="地址"
+        type="address"
+        errors={errors}
+        rules={{ required: "地址為必填" }}
+        register={register}
+      ></Input>
 
       <div className="flex flex-col">
         <label className="mb-2" htmlFor="vegetarian">
